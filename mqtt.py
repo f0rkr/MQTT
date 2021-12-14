@@ -1,5 +1,11 @@
 #! /usr/bin/python3
 
+# Brief Mqtt main program
+# Author: Ashad Mohamed (aka. F0rkr)
+# **********************************
+# This the main file for this project, contain all general function
+# to implement mqtt publisher and subscriber.
+
 import socket
 import logging
 import sys
@@ -32,7 +38,23 @@ def run_subscriber(addr, topic, sub_id):
 
 
 def run_server(addr):
-    """
-    Run main server loop
-    """
-    pass
+    # TO-DO: Create MQTT Server socket
+    ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+    ServerSocket.bind(addr)
+    ServerSocket.listen(1)
+
+    # Creating a non blocking event loop using select
+    socketFds = [ServerSocket] # Socket Descriptors list
+    clients = {}
+    while True:
+        readersList, writersList, unexpectedCondition = select.select(socketFds, [], [])
+        for connection in readersList:
+           if connection == ServerSocket:
+                newConnection, address = ServerSocket.accept()
+                clients[newConnection] = address
+                socketFds.append(newConnection)
+                print("[!] Got new connection from {0}".format(address))
+           else:
+                packet = connection.recv(1024).decode("utf8")
+                print("[+] New msg from {0} : {1}".format(clients[connection], packet), flush="True", end="")
+    return 0
