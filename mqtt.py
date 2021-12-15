@@ -11,6 +11,7 @@ import logging
 import sys
 import os
 import traceback
+import time
 import select
 from sys import stdin
 
@@ -53,8 +54,15 @@ def run_server(addr):
                 newConnection, address = ServerSocket.accept()
                 clients[newConnection] = address
                 socketFds.append(newConnection)
-                print("[!] Got new connection from {0}".format(address))
+                print("{0} [CONNECTION]: New connection from {1}".format(str(time.time_ns())[0:16], address))
            else:
+            try:
                 packet = connection.recv(1024).decode("utf8")
-                print("[+] New msg from {0} : {1}".format(clients[connection], packet), flush="True", end="")
+                print("{0} [INFO]: New msg from {1} : {2}".format(str(time.time_ns())[0:16], clients[connection], packet),flush="True", end="")
+            except Exception as e:
+                print("{0} [INFO]: Client {1} disconnected".format(str(time.time_ns())[0:16], clients[connection]))
+                clients.pop(connection)
+                socketFds.remove(connection)
+                connection.close()
+
     return 0
